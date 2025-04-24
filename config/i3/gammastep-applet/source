@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+
+import gi
+import subprocess
+import os
+import sys
+import fcntl
+
+# === Instance Lock ===
+LOCK_FILE = '/tmp/gammastep-applet.lock'
+lock_file = open(LOCK_FILE, 'w')
+
+try:
+    fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except IOError:
+    # Another instance is running
+    sys.exit(0)
+
+
+gi.require_version('Gtk', '3.0')
+gi.require_version('AppIndicator3', '0.1')
+
+from gi.repository import Gtk
+from gi.repository import AppIndicator3
+
+APPINDICATOR_ID = 'gammastep_tray'
+current_k = 4500
+gammastep_running = True
+
+def set_temperature(k):
+    subprocess.call(["gammastep", "-x"])
+    subprocess.Popen(["gammastep", "-O", str(k)])
+    update_k_label()
+
+def increase_temp(_):
+    global current_k
+    current_k = min(current_k + 500, 10000)
+    set_temperature(current_k)
+
+def decrease_temp(_):
+    global current_k
+    current_k = max(current_k - 500, 1000)
+    set_temperature(current_k)
+
+def toggle_suspend(widget):
+    global gammastep_running
+    gammastep_running = widget.get_active()
+    if gammastep_running:
+        subprocess.Popen(["gammastep", "-O", str(current_k)])
+    else:
+        subprocess.call(["gammastep", "-x"])
+    update_k_label()
+
+def update_k_label():
+    if gammastep_running:
+        k_label_widget.set_text(f"Current K: {current_k}")
+    else:
+        k_label_widget.set_text("Gammastep Suspended")
+
+
+def quit_app(_):
+    Gtk.main_quit()
+
+# Tray icon setup
+indicator = AppIndicator3.Indicator.new(
+    APPINDICATOR_ID,
+    "display-brightness",
+    AppIndicator3.IndicatorCategory.APPLICATION_STATUS
+)
+indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+
+# Tray menu
+menu = Gtk.Menu()
+
+item_up = Gtk.MenuItem(label='Increase K (+500)')
+item_up.connect('activate', increase_temp)
+menu.append(item_up)
+
+item_down = Gtk.MenuItem(label='Decrease K (-500)')
+item_down.connect('activate', decrease_temp)
+menu.append(item_down)
+
+menu.append(Gtk.SeparatorMenuItem())
+
+# Suspend checkbox
+suspend_toggle = Gtk.CheckMenuItem(label="Gammastep Running")
+suspend_toggle.set_active(True)
+suspend_toggle.connect('toggled', toggle_suspend)
+menu.append(suspend_toggle)
+
+menu.append(Gtk.SeparatorMenuItem())
+
+# K label
+k_label_widget = Gtk.Label(label=f"Current K: {current_k}")
+k_label_widget.set_xalign(0.0)
+k_label_item = Gtk.MenuItem()
+k_label_item.add(k_label_widget)
+k_label_item.set_sensitive(False)  # Make it non-interactive
+menu.append(k_label_item)
+
+# menu.append(Gtk.SeparatorMenuItem())
+
+# Quit
+# item_quit = Gtk.MenuItem(label='Quit')
+# item_quit.connect('activate', quit_app)
+# menu.append(item_quit)
+
+menu.show_all()
+indicator.set_menu(menu)
+
+# Start gammastep initially
+set_temperature(current_k)
+
+Gtk.main()
+
