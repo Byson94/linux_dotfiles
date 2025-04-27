@@ -30,7 +30,10 @@ gaps outer 0
 # set caps lock to escape since its useless
 exec_always --no-startup-id setxkbmap -option caps:escape
 
-# the following command ensures that gvfs starts so that the trash can will show up in thunar or pcmanfm.
+# VPN
+exec --no-startup-id protonvpn-app
+
+# The following command ensures that gvfs starts so that the trash can will show up in thunar or pcmanfm.
 exec --no-startup-id /usr/lib/gvfsd
 exec --no-startup-id /usr/lib/gvfsd-trash
 
@@ -52,17 +55,14 @@ exec_always --no-startup-id parcellite
 # and nm-applet is a desktop environment-independent system tray GUI for it.
 exec_always --no-startup-id  nm-applet
 
-# Trayer
-# exec_always --no-startup-id sh -c 'pkill -x trayer; trayer --edge bottom --align center --SetDockType false --SetPartialStrut true --expand false --widthtype request --transparent true --alpha -1 --tint 0x1e1e2e --height 28 &'
-
-# THE SCRATCH PAD, THE GOAT
+# THE SCRATCH PAD
 # Show the first scratchpad window
 bindsym $mod+minus move scratchpad
 # Make the currently focused window a scratchpad
 bindsym $mod+Shift+minus scratchpad show
 
 # Background & Polybar startup
-exec_always --no-startup-id feh --bg-scale /home/byson94/Pictures/Wallpapers/bg_20.jpg
+exec_always --no-startup-id feh --bg-scale /home/byson94/Pictures/Wallpapers/nord_buildings.png
 exec_always --no-startup-id  ~/.config/polybar/launch.sh
 
 # Notification daemon
@@ -76,6 +76,9 @@ exec_always --no-startup-id mpd
 
 # natural scrolling for touchpad
 exec_always --no-startup-id xinput set-prop "AlpsPS/2 ALPS GlidePoint" "libinput Natural Scrolling Enabled" 1
+
+# good cursors
+exec_always --no-startup-id xinput set-prop "AlpsPS/2 ALPS GlidePoint" "libinput Scrolling Pixel Distance" 30
 
 # rofi search
 bindsym $mod+d exec rofi -no-config -no-lazy-grab -show drun -modi drun -theme ~/.config/rofi/config.rasi
@@ -98,7 +101,7 @@ for_window [class=".*"] border pixel 0
 bindsym Print exec flameshot gui
 
 # uhh cursor?
-exec --no-startup-id xsetroot -cursor_name left_ptr
+# exec --no-startup-id xsetroot -cursor_name left_ptr
 
 # Start XDG autostart .desktop files using dex. See also
 # https://wiki.archlinux.org/index.php/XDG_Autostart
