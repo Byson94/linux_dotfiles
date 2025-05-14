@@ -1,2 +1,2 @@
 # linux_dotfiles
-My linux dotfiles for i3
+My linux dotfiles for i3wm
